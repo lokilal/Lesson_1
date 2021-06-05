@@ -125,10 +125,9 @@ def chose(last): #Окно с выбором компонентов
         return(hash.hexdigest())
 
     layout = [
-        [sg.Checkbox("latest.json")],
         [sg.Checkbox("VC2015-19")],
-        [sg.Text(" ", size=(40, 16))],
-        [sg.InputText(default_text= os.path.dirname(os.path.abspath(__file__)), key="text", size=(50, 0)),
+        [sg.Text(" ", size=(42, 16))],
+        [sg.InputText(default_text= r'C:\ '.strip(), key="text", size=(50, 0)),
          sg.Button(size=(16, 0), button_text="Install", key="Submit")]
     ]
 
@@ -146,7 +145,7 @@ def chose(last): #Окно с выбором компонентов
 
 
 def setup(second, values, upload): #Окно установки
-    url = ["https://www.khotlenko.ru/download/demo/latest.json", "https://www.khotlenko.ru/download/thirdParty/VC2015-19.exe"]
+    url = ["https://www.khotlenko.ru/download/thirdParty/VC_redist.x86_15-19.exe"]
     def hash(self, fname, algo):
         with open(fname) as handle:
             for line in handle:
@@ -160,7 +159,7 @@ def setup(second, values, upload): #Окно установки
     window = sg.Window('Installer', layout, size=(620, 370), grab_anywhere=False, element_justification="c").Finalize()
     second.close()
     count = 0
-    for i in range(2):
+    for i in range(1):
         sg.OneLineProgressMeter('Progress', i + 1, 2, 'single', orientation="h")
         if values['version'] == '0' and count != 1:
             with upload, zipfile.ZipFile(io.BytesIO(upload.content)) as archive:
@@ -187,11 +186,14 @@ def main():
     Также второе окно возвращает массив со сзначеними Checkbox.
     :return:
     """
-    print("Pleas Wait, loading the components!")
-    upload =  uploadZip()
-    first = license()
-    second, values = chose(first)
-    setup(second, values, upload)
+    print("Please Wait, loading the components!")
+    if get_reg('version'):
+        raise SystemExit
+    else:
+        upload = uploadZip()
+        first = license()
+        second, values = chose(first)
+        setup(second, values, upload)
 
 
 if __name__ == "__main__":
