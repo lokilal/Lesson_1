@@ -7,7 +7,7 @@ import winreg
 import wget
 import zipfile
 import io
-from threading import Thread
+
 
 
 
@@ -38,9 +38,10 @@ def get_reg(name):
 def uploadZip():
     mainUrl = 'https://khotlenko.ru/download/engine/build-latest.zip'
     r = requests.get(mainUrl)
-    print("Nope")
-    with r, zipfile.ZipFile(io.BytesIO(r.content)) as archive:
-        archive.extractall(r'\engine') #archive.extractall(values['text'] + r'\engine') #
+    return r
+    """with r, zipfile.ZipFile(io.BytesIO(r.content)) as archive:
+        archive.extractall(os.path.abspath(os.curdir) + r'\engine')"""
+    #archive.extractall(values['text'] + r'\engine') #
 
 
 
@@ -144,7 +145,7 @@ def chose(last): #Окно с выбором компонентов
     return window, values
 
 
-def setup(second, values): #Окно установки
+def setup(second, values, upload): #Окно установки
     url = ["https://www.khotlenko.ru/download/demo/latest.json", "https://www.khotlenko.ru/download/thirdParty/VC2015-19.exe"]
     def hash(self, fname, algo):
         with open(fname) as handle:
@@ -156,10 +157,15 @@ def setup(second, values): #Окно установки
                [sg.Text("", size=(0, 7))],
                [sg.Text("",size=(50, 0)), sg.Button("Close", size=(16, 0), key="Nope")]
     ]
-    window = sg.Window('Installer', layout, size=second.size, grab_anywhere=False, element_justification="c").Finalize()
+    window = sg.Window('Installer', layout, size=(620, 370), grab_anywhere=False, element_justification="c").Finalize()
     second.close()
+    count = 0
     for i in range(2):
         sg.OneLineProgressMeter('Progress', i + 1, 2, 'single', orientation="h")
+        if values['version'] == '0' and count != 1:
+            with upload, zipfile.ZipFile(io.BytesIO(upload.content)) as archive:
+                archive.extractall(values['text'] + r'\engine')
+            count += 1
         if values[i]:
             urllib.request.urlretrieve(url[i], values['text'] + r'\ '.strip() + str(url[i])[str(url[i]).rfind('/') + 1:])
     while True:
@@ -181,20 +187,11 @@ def main():
     Также второе окно возвращает массив со сзначеними Checkbox.
     :return:
     """
+    print("Pleas Wait, loading the components!")
+    upload =  uploadZip()
     first = license()
     second, values = chose(first)
-    if values['version'] == '0':
-        a = str(values["text"])
-        print(a)
-        t1 = Thread(target=uploadZip)
-        t1.start()
-        t2 = Thread(target=setup(second, values))
-        t2.start()
-
-    else:
-        t2 = Thread(target=setup(second, values))
-        t2.start()
-        t2.join()
+    setup(second, values, upload)
 
 
 if __name__ == "__main__":
